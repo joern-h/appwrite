@@ -628,21 +628,15 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                 }
 
-                /** Trigger Webhook */
-                $ev = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
-                $ev
+                /** Trigger Functions */
+                $queueForFunctions
                     ->setProject($project)
+                    ->setUser($user)
                     ->setEvent('buckets.[bucketId].files.[fileId].uploaded')
                     ->setParam('bucketId', $bucket->getId())
                     ->setParam('fileId', $file->getId())
                     ->setContext('bucket', $bucket)
-                    ->setUser($user)
                     ->setPayload($file->getArrayCopy())
-                    ->trigger();
-
-                /** Trigger Functions */
-                $queueForFunctions
-                    ->from($ev)
                     ->trigger();
 
                 /** Trigger realtime event */
